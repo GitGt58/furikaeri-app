@@ -1,0 +1,10 @@
+# ふりかえりBot - Cloudflare Worker 設定ファイル
+# デプロイ前に name を変更しても構いません
+
+name = "furikaeri-bot-api"
+main = "index.js"
+compatibility_date = "2024-09-23"
+
+# Workers AI バインディング（APIキー不要・無料）
+[ai]
+binding = "AI"

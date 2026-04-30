@@ -1,388 +1,153 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ふりかえりApp</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふりかえりBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
   <link rel="stylesheet" href="style.css">
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
 </head>
-
 <body>
 
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="logo">🎯</div>
-      <span class="app-title">ふりかえりApp</span>
-    </div>
-    <span id="today-lbl" style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;"></span>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">🎯</div>
+    <span class="app-title">ふりかえりBot</span>
   </div>
+  <span id="today-lbl" style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;"></span>
+</div>
 
-  <div class="nav-tabs">
-    <button class="nav-tab active" data-page="goals" onclick="showPage(this)">🎯 目標</button>
-    <button class="nav-tab" data-page="furikaeri" onclick="showPage(this)">✏️ 振り返り</button>
-    <button class="nav-tab" data-page="history" onclick="showPage(this)">📋 履歴</button>
-    <button class="nav-tab" data-page="settings" onclick="showPage(this)">⚙️ 設定</button>
+<div class="nav-tabs">
+  <button class="nav-tab active" data-page="goals" onclick="showPage(this)">🎯 目標</button>
+  <button class="nav-tab" data-page="furikaeri" onclick="showPage(this)">✏️ 振り返り</button>
+  <button class="nav-tab" data-page="history" onclick="showPage(this)">📋 履歴</button>
+</div>
+
+<!-- ========== 目標 ========== -->
+<div class="page active" id="page-goals">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div>
+      <div class="section-title">2ヶ月の目標</div>
+      <div class="section-sub" style="margin-bottom:0;">達成したい目標を登録してください</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openGoalModal()">＋ 追加</button>
   </div>
-
-  <!-- ========== 目標 ========== -->
-  <div class="page active" id="page-goals">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <div>
-        <div class="section-title">2ヶ月の目標</div>
-        <div class="section-sub" style="margin-bottom:0;">達成したい目標を登録してください</div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="openGoalModal()">＋ 追加</button>
-    </div>
-    <div id="goals-list"></div>
-    <div class="empty" id="goals-empty" style="display:none;">
-      <div class="empty-icon">🎯</div>
-      <div style="font-size:13px;">まだ目標がありません<br>「追加」ボタンから登録しましょう</div>
-    </div>
+  <div id="goals-list"></div>
+  <div class="empty" id="goals-empty" style="display:none;">
+    <div class="empty-icon">🎯</div>
+    <div style="font-size:13px;">まだ目標がありません<br>「追加」ボタンから登録しましょう</div>
   </div>
+</div>
 
-  <!-- ========== 振り返り ========== -->
-  <div class="page" id="page-furikaeri" style="padding:0;">
+<!-- ========== 振り返り ========== -->
+<div class="page" id="page-furikaeri" style="padding:0;">
 
-    <div id="qa-start" style="padding:20px;max-width:680px;margin:0 auto;">
-      <div class="section-title">今日の振り返り</div>
-      <div class="section-sub">全ての目標について1問1答で振り返ります</div>
-      <div id="qa-start-goals"></div>
-      <div class="empty" id="qa-empty" style="display:none;">
-        <div class="empty-icon">📋</div>
-        <div style="font-size:13px;">目標が登録されていません<br>「目標」タブから追加してください</div>
-      </div>
-      <button class="btn btn-primary btn-full" id="qa-start-btn" onclick="startQA()"
-        style="margin-top:14px;display:none;">
-        振り返りを始める →
-      </button>
-    </div>
-
-    <div id="qa-wrap" style="display:none;">
-      <div class="qa-progress-bar-wrap">
-        <div class="qa-progress-meta">
-          <span id="qa-prog-label">振り返り中...</span>
-          <span id="qa-prog-num" style="font-family:'DM Mono',monospace;">0%</span>
-        </div>
-        <div class="qa-bar-bg">
-          <div class="qa-bar-fg" id="qa-bar" style="width:0%"></div>
-        </div>
-      </div>
-      <div class="qa-messages" id="qa-messages"></div>
-      <div class="qa-input-area" id="qa-input-area">
-        <div class="qa-input-row">
-          <textarea class="qa-textarea" id="qa-textarea" rows="1" placeholder="回答を入力... (Shift+Enter で送信 / Enter で改行)"
-            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-          <button class="qa-send-btn" id="qa-send" onclick="sendAnswer()">↑</button>
-        </div>
-        <div class="qa-hint" id="qa-hint">Shift+Enter で送信　/ Enter で改行</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========== 履歴 ========== -->
-  <div class="page" id="page-history">
-    <div class="section-title">振り返り履歴</div>
-    <div class="section-sub">過去の記録を確認できます</div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <select id="hist-filter" onchange="renderHistory()" style="flex:1;">
-        <option value="">すべての日付</option>
-      </select>
-      <button class="btn btn-ghost btn-sm" style="color:var(--warn);" onclick="clearHistory()">🗑 削除</button>
-    </div>
-    <div id="history-list"></div>
-    <div class="empty" id="history-empty" style="display:none;">
+  <div id="qa-start" style="padding:20px;max-width:680px;margin:0 auto;">
+    <div class="section-title">今日の振り返り</div>
+    <div class="section-sub">全ての目標について1問1答で振り返ります</div>
+    <div id="qa-start-goals"></div>
+    <div class="empty" id="qa-empty" style="display:none;">
       <div class="empty-icon">📋</div>
-      <div style="font-size:13px;">まだ記録がありません</div>
+      <div style="font-size:13px;">目標が登録されていません<br>「目標」タブから追加してください</div>
     </div>
+    <button class="btn btn-primary btn-full" id="qa-start-btn" onclick="startQA()" style="margin-top:14px;display:none;">
+      振り返りを始める →
+    </button>
   </div>
 
-  <!-- ========== 設定 ========== -->
-  <div class="page" id="page-settings">
-    <div class="section-title">設定</div>
-
-    <!-- AI設定 -->
-    <div class="settings-group">
-      <div class="settings-group-title">AI / LLM 設定</div>
-      <div class="card" style="margin-bottom:0;">
-
-        <!-- プロバイダー切替 -->
-        <div class="frow">
-          <label class="lbl">使用するAI</label>
-          <div class="provider-tabs">
-            <button class="provider-tab active" data-provider="cloud" onclick="switchProvider(this)">クラウドAPI</button>
-            <button class="provider-tab" data-provider="local" onclick="switchProvider(this)">ローカルLLM</button>
-            <button class="provider-tab" data-provider="none" onclick="switchProvider(this)">使わない</button>
-          </div>
-        </div>
-
-        <!-- クラウドAPI設定 -->
-        <div id="provider-claude">
-
-          <!-- サービス選択 -->
-          <div class="frow">
-            <label class="lbl">AIサービス</label>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-              <button class="cloud-svc-btn active" data-svc="claude" onclick="switchCloudSvc(this)">
-                <div style="font-size:18px;margin-bottom:3px;">🟣</div>
-                <div style="font-size:11px;font-weight:700;">Claude</div>
-                <div style="font-size:10px;color:inherit;opacity:.75;">Anthropic</div>
-              </button>
-              <button class="cloud-svc-btn" data-svc="openai" onclick="switchCloudSvc(this)">
-                <div style="font-size:18px;margin-bottom:3px;">🟢</div>
-                <div style="font-size:11px;font-weight:700;">ChatGPT</div>
-                <div style="font-size:10px;color:inherit;opacity:.75;">OpenAI</div>
-              </button>
-              <button class="cloud-svc-btn" data-svc="gemini" onclick="switchCloudSvc(this)">
-                <div style="font-size:18px;margin-bottom:3px;">🔵</div>
-                <div style="font-size:11px;font-weight:700;">Gemini</div>
-                <div style="font-size:10px;color:inherit;opacity:.75;">Google</div>
-              </button>
-            </div>
-          </div>
-
-          <!-- APIキー入力 -->
-          <div class="frow">
-            <label class="lbl" id="cloud-key-label">Claude APIキー</label>
-            <div class="api-key-wrap">
-              <input type="password" id="api-key-input" placeholder="sk-ant-..." oninput="saveApiKey()">
-              <button class="api-toggle" onclick="toggleApiVis()">👁</button>
-            </div>
-            <div class="status-row">
-              <div id="api-dot" class="dot-ng"></div>
-              <span id="api-status">未設定</span>
-              <a id="api-key-link" href="https://console.anthropic.com/settings/keys" target="_blank"
-                style="color:var(--blue);font-size:11px;margin-left:6px;">APIキーを取得する →</a>
-            </div>
-          </div>
-
-          <!-- モデル選択 -->
-          <div class="frow" style="margin-bottom:6px;">
-            <label class="lbl">使用モデル</label>
-            <select id="cloud-model-select" onchange="saveSetting('cloudModel',this.value)">
-              <option value="claude-opus-4-5">claude-opus-4-5（高性能）</option>
-              <option value="claude-sonnet-4-5">claude-sonnet-4-5（バランス）</option>
-              <option value="claude-haiku-4-5-20251001">claude-haiku-4-5（高速・低コスト）</option>
-            </select>
-          </div>
-
-          <div
-            style="font-size:11px;color:var(--ink2);background:var(--amber-lt);padding:10px 12px;border-radius:var(--r-sm);border:1px solid #fde68a;line-height:1.7;">
-            ⚠️ APIキーはこのブラウザのlocalStorageにのみ保存されます。外部サーバーには送信されません。
-          </div>
-
-          <!-- クラウドAPI接続テスト -->
-          <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button class="btn btn-secondary btn-sm" onclick="testCloudAPI()">接続テスト</button>
-            <div class="status-row" id="cloud-test-status" style="display:none;">
-              <div id="cloud-test-dot" class="dot-ng"></div>
-              <span id="cloud-test-msg">テスト中...</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ローカルLLM設定 -->
-        <div id="provider-local" style="display:none;">
-
-          <!-- セットアップ手順ガイド（LM Studio のみ・最初から展開） -->
-          <div style="margin-bottom:14px;">
-            <button onclick="toggleGuide()"
-              style="display:flex;align-items:center;gap:6px;width:100%;background:var(--blue-lt);border:1px solid #bfdbfe;border-radius:var(--r-sm);padding:9px 13px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;font-family:'Noto Sans JP',sans-serif;">
-              <span id="guide-arrow">▼</span> LM Studio セットアップ手順
-            </button>
-            <div id="llm-guide"
-              style="margin-top:8px;border:1px solid #bfdbfe;border-radius:var(--r-sm);overflow:hidden;">
-
-              <!-- LM Studio 手順（コマンドライン不要） -->
-              <div style="padding:14px 16px;font-size:12px;line-height:1.9;color:var(--ink2);">
-                <div style="font-weight:700;color:var(--ink);margin-bottom:10px;">🖥️ LM Studio のセットアップ（コマンドライン不要・完全無料）
-                </div>
-
-                <div style="margin-bottom:12px;">
-                  <div style="font-weight:700;color:var(--ink);margin-bottom:4px;">① LM Studio をダウンロード・インストール</div>
-                  <div>公式サイトからお使いのOSのインストーラーをダウンロードし、ダブルクリックしてインストール。</div>
-                  <a href="https://lmstudio.ai/" target="_blank"
-                    style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-weight:500;margin-top:4px;">🔗
-                    https://lmstudio.ai/</a>
-                  <div style="margin-top:4px;color:var(--ink3);">対応OS: macOS / Windows / Linux　※ターミナル操作不要</div>
-                </div>
-
-                <div style="margin-bottom:12px;">
-                  <div style="font-weight:700;color:var(--ink);margin-bottom:4px;">② モデルをダウンロード（GUIで操作）</div>
-                  <ol style="padding-left:18px;line-height:2.2;">
-                    <li>LM Studio を起動する</li>
-                    <li>左メニューの「Search（🔍）」をクリック</li>
-                    <li>検索欄に <strong>gemma3</strong> や <strong>llama3.2</strong> と入力</li>
-                    <li>表示されたモデルの「Download」ボタンをクリック</li>
-                  </ol>
-                  <div
-                    style="margin-top:6px;padding:8px 10px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0;">
-                    💡 推奨モデル（日本語対応・軽量）<br>
-                    <strong>Gemma 3 4B</strong> — Google製・8GBメモリで動作<br>
-                    <strong>Llama 3.2 3B</strong> — Meta製・バランス型
-                  </div>
-                </div>
-
-                <div style="margin-bottom:12px;">
-                  <div style="font-weight:700;color:var(--ink);margin-bottom:4px;">③ ローカルサーバーを起動（GUIで操作）</div>
-                  <ol style="padding-left:18px;line-height:2.2;">
-                    <li>左メニューの「Local Server（⇄）」をクリック</li>
-                    <li>上部のプルダウンからダウンロードしたモデルを選択</li>
-                    <li>「Start Server」ボタンをクリック</li>
-                    <li>「CORS」スイッチを <strong>ON</strong> にする（重要）</li>
-                  </ol>
-                  <div
-                    style="margin-top:4px;padding:6px 10px;background:#fef9c3;border-radius:6px;border:1px solid #fde68a;font-size:11px;">
-                    ⚠️ CORS を ON にしないとブラウザから接続できません
-                  </div>
-                </div>
-
-                <div style="margin-bottom:12px;">
-                  <div style="font-weight:700;color:var(--ink);margin-bottom:4px;">④ このアプリに設定を入力</div>
-                  <div>エンドポイント URL：</div>
-                  <div
-                    style="background:#1c1c1c;color:#a3e635;border-radius:6px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:11px;margin-top:4px;">
-                    http://localhost:1234/v1/chat/completions</div>
-                  <div style="margin-top:8px;">モデル名：LM Studio の Server タブ上部に表示される文字列をコピー</div>
-                  <div style="margin-top:4px;color:var(--ink3);font-size:11px;">例: <code
-                      style="background:var(--surface);padding:1px 5px;border-radius:3px;">lmstudio-community/Meta-Llama-3.2-3B-Instruct-GGUF</code>
-                  </div>
-                </div>
-
-                <div
-                  style="background:var(--accent-lt);border:1px solid var(--accent-mid);border-radius:6px;padding:10px 12px;">
-                  ✅ <strong>動作確認：</strong>下の「接続テスト」ボタンを押して「接続成功！」と表示されれば完了です。
-                </div>
-              </div>
-
-            </div>
-          </div>
-          <!-- /セットアップ手順ガイド -->
-
-          <div class="frow">
-            <label class="lbl">エンドポイント URL</label>
-            <input type="text" id="local-endpoint" placeholder="http://localhost:1234/v1/chat/completions"
-              oninput="saveSetting('localEndpoint',this.value)">
-            <div class="fhint">LM Studio: http://localhost:1234/v1/chat/completions</div>
-          </div>
-          <div class="frow">
-            <label class="lbl">モデル名</label>
-            <input type="text" id="local-model" placeholder="例：llama3.2、gemma3、phi4"
-              oninput="saveSetting('localModel',this.value)">
-            <div class="fhint">LM Studio のサーバータブ上部に表示されるモデル識別子を入力</div>
-          </div>
-          <div class="frow" style="margin-bottom:0;">
-            <button class="btn btn-secondary btn-sm" onclick="testLocalLLM()">接続テスト</button>
-            <div class="status-row" style="margin-top:6px;">
-              <div id="local-dot" class="dot-ng"></div>
-              <span id="local-status">未確認</span>
-            </div>
-          </div>
-        </div>
-
+  <div id="qa-wrap" style="display:none;">
+    <div class="qa-progress-bar-wrap">
+      <div class="qa-progress-meta">
+        <span id="qa-prog-label">振り返り中...</span>
+        <span id="qa-prog-num" style="font-family:'DM Mono',monospace;">0%</span>
       </div>
+      <div class="qa-bar-bg"><div class="qa-bar-fg" id="qa-bar" style="width:0%"></div></div>
     </div>
-
-    <!-- AI機能ON/OFF -->
-    <div class="settings-group">
-      <div class="settings-group-title">AI機能</div>
-      <div class="card" style="margin-bottom:0;">
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">明日の行動をAIに提案させる</div>
-            <div class="toggle-sub">「明日やること」の質問時に候補3件を自動表示</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggle-ai-suggest" onchange="saveSetting('aiSuggest', this.checked)">
-            <div class="toggle-track"></div>
-            <div class="toggle-knob"></div>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">まとめ文をAIで生成する</div>
-            <div class="toggle-sub">OFFの場合はテンプレートで生成</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggle-ai-summary" onchange="saveSetting('aiSummary', this.checked)" checked>
-            <div class="toggle-track"></div>
-            <div class="toggle-knob"></div>
-          </label>
-        </div>
+    <div class="qa-messages" id="qa-messages"></div>
+    <div class="qa-input-area" id="qa-input-area">
+      <div class="qa-input-row">
+        <textarea class="qa-textarea" id="qa-textarea" rows="1"
+          placeholder="回答を入力... (Shift+Enter で送信 / Enter で改行)"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="qa-send-btn" id="qa-send" onclick="sendAnswer()">↑</button>
       </div>
-    </div>
-
-    <!-- データ管理 -->
-    <div class="settings-group">
-      <div class="settings-group-title">データ管理</div>
-      <div class="card" style="margin-bottom:0;">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 エクスポート</button>
-          <button class="btn btn-danger btn-sm" onclick="resetAll()">🗑 全データ削除</button>
-        </div>
-        <div class="fhint" style="margin-top:8px;">データはブラウザのlocalStorageに保存されています</div>
-      </div>
+      <div class="qa-hint" id="qa-hint">Shift+Enter で送信　/ Enter で改行</div>
     </div>
   </div>
+</div>
 
-  <!-- ========== 目標モーダル ========== -->
-  <div class="overlay" id="goal-modal">
-    <div class="modal">
-      <div class="modal-title" id="modal-title">目標を追加</div>
-      <div class="frow">
-        <label class="lbl">目標タイトル <span style="color:var(--warn)">*</span></label>
-        <input type="text" id="m-title" placeholder="例：体重を5キロ落とす、TOEIC700点取得">
-      </div>
-      <div class="frow">
-        <label class="lbl">目標の詳細・背景（任意）</label>
-        <textarea id="m-desc" rows="2" placeholder="例：健康診断でD判定。食事管理と週3回の運動を継続する"></textarea>
-      </div>
-      <div class="frow">
-        <label class="lbl">カテゴリ</label>
-        <div class="chips">
-          <span class="chip sel" data-cat="health" onclick="selCat(this)">🏃 健康・運動</span>
-          <span class="chip" data-cat="study" onclick="selCat(this)">📚 学習・スキル</span>
-          <span class="chip" data-cat="career" onclick="selCat(this)">💼 仕事・キャリア</span>
-          <span class="chip" data-cat="other" onclick="selCat(this)">✨ その他</span>
-        </div>
-      </div>
-      <div class="frow" style="margin-bottom:0;">
-        <label class="lbl">期間</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div>
-            <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">開始日</div>
-            <input type="text" id="m-start" placeholder="2025/05/01">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">終了日</div>
-            <input type="text" id="m-end" placeholder="2025/06/30">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeGoalModal()">キャンセル</button>
-        <button class="btn btn-primary" onclick="saveGoal()">保存</button>
+<!-- ========== 履歴 ========== -->
+<div class="page" id="page-history">
+  <div class="section-title">振り返り履歴</div>
+  <div class="section-sub">過去の記録を確認できます</div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <select id="hist-filter" onchange="renderHistory()" style="flex:1;"><option value="">すべての日付</option></select>
+    <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 エクスポート</button>
+    <button class="btn btn-ghost btn-sm" style="color:var(--warn);" onclick="clearHistory()">🗑 削除</button>
+  </div>
+  <div id="history-list"></div>
+  <div class="empty" id="history-empty" style="display:none;">
+    <div class="empty-icon">📋</div>
+    <div style="font-size:13px;">まだ記録がありません</div>
+  </div>
+</div>
+
+<!-- ========== 目標モーダル ========== -->
+<div class="overlay" id="goal-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">目標を追加</div>
+    <div class="frow">
+      <label class="lbl">目標タイトル <span style="color:var(--warn)">*</span></label>
+      <input type="text" id="m-title" placeholder="例：体重を5キロ落とす、TOEIC700点取得">
+    </div>
+    <div class="frow">
+      <label class="lbl">目標の詳細・背景（任意）</label>
+      <textarea id="m-desc" rows="2" placeholder="例：健康診断でD判定。食事管理と週3回の運動を継続する"></textarea>
+    </div>
+    <div class="frow">
+      <label class="lbl">カテゴリ</label>
+      <div class="chips">
+        <span class="chip sel" data-cat="health" onclick="selCat(this)">🏃 健康・運動</span>
+        <span class="chip" data-cat="study"  onclick="selCat(this)">📚 学習・スキル</span>
+        <span class="chip" data-cat="career" onclick="selCat(this)">💼 仕事・キャリア</span>
+        <span class="chip" data-cat="other"  onclick="selCat(this)">✨ その他</span>
       </div>
     </div>
-  </div>
-
-  <!-- ========== 回答編集モーダル ========== -->
-  <div class="overlay" id="edit-answer-modal">
-    <div class="modal">
-      <div class="modal-title" id="edit-modal-title">回答を修正</div>
-      <div id="edit-modal-body"></div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeEditModal()">キャンセル</button>
-        <button class="btn btn-primary" onclick="applyEdit()">修正を反映する</button>
+    <div class="frow" style="margin-bottom:0;">
+      <label class="lbl">期間</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">開始日</div>
+          <input type="text" id="m-start" placeholder="2025/05/01">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">終了日</div>
+          <input type="text" id="m-end" placeholder="2025/06/30">
+        </div>
       </div>
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeGoalModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveGoal()">保存</button>
+    </div>
   </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<!-- ========== 回答編集モーダル ========== -->
+<div class="overlay" id="edit-answer-modal">
+  <div class="modal">
+    <div class="modal-title" id="edit-modal-title">回答を修正</div>
+    <div id="edit-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="applyEdit()">修正を反映する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
   <script src="app.js"></script>
 </body>
-
 </html>
