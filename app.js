@@ -1,6 +1,6 @@
 // ===== WORKER URL =====
 // Cloudflare Workerのデプロイ後にURLを設定してください
-// 例: 'https://furikaeri-bot-api.YOUR_SUBDOMAIN.workers.dev'
+// 例: 'https://black-credit-3a3a.gooooo-y-4-2.workers.dev'
 const WORKER_URL = 'https://black-credit-3a3a.gooooo-y-4-2.workers.dev';
 
 // ===== STATE =====
