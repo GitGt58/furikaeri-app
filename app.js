@@ -370,6 +370,9 @@ async function callAI(prompt) {
 }
 
 function aiAvailable() {
+  // Worker URLが設定されていれば常に使える（APIキー・ローカルLLM不要）
+  if (WORKER_URL && !WORKER_URL.includes('YOUR_SUBDOMAIN')) return true;
+  // 個人APIキー設定時のフォールバック
   const p = settings.provider;
   if (!p || p === 'none') return false;
   if (p === 'cloud') {
@@ -377,7 +380,7 @@ function aiAvailable() {
     const key = settings['apiKey_' + svc] || settings.apiKey || '';
     return key.length > 10;
   }
-  if (p === 'local') return !!(settings.localEndpoint); // モデル名は省略可能（デフォルト使用）
+  if (p === 'local') return !!(settings.localEndpoint);
   return false;
 }
 
@@ -535,10 +538,9 @@ function stepNext() {
     if (suggestOn && canUseAI) {
       addTomorrowCandidates(q.goalId);
     } else if (suggestOn && !canUseAI) {
-      // AI設定はONだがAPIキー未設定の場合はヒントを表示
       const hint = document.createElement('div');
       hint.className = 'bubble-wrap bot';
-      hint.innerHTML = `<div class="bubble-sender">ふりかえりBot</div><div class="bubble bot" style="font-size:12px;color:var(--ink3);">💡 AI提案を使うには設定タブでAPIキーを入力してください</div>`;
+      hint.innerHTML = `<div class="bubble-sender">ふりかえりBot</div><div class="bubble bot" style="font-size:12px;color:var(--ink3);">💡 AI提案はWorkerのURLが設定されると自動で表示されます。直接入力してください。</div>`;
       document.getElementById('qa-messages').appendChild(hint);
       scrollBottom();
     }
