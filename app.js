@@ -1,3 +1,8 @@
+// ===== WORKER URL =====
+// Cloudflare Workerのデプロイ後にURLを設定してください
+// 例: 'https://furikaeri-bot-api.YOUR_SUBDOMAIN.workers.dev'
+const WORKER_URL = 'https://black-credit-3a3a.gooooo-y-4-2.workers.dev';
+
 // ===== STATE =====
 let db = { goals: [], sessions: [] };
 let settings = {
@@ -41,7 +46,11 @@ const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 
 // wrapLong: テキスト整形
 // 優先順位: 1.\n(意図的改行)を保持 2.。の後で改行 3.30文字超えで強制改行
-function wrapLong(text, n = 30) {
+// wrapLong: テキスト整形
+// 優先順位: 1.\n(意図的改行)を保持 2.。の後で改行 3.20文字超えで強制改行
+// 閾値20文字: 最小画面幅375pxでバブル幅85%-padding=289px、全角22文字が上限
+// white-space:preとの組み合わせで\nのみが改行になりCSSの自動折り返しを排除
+function wrapLong(text, n = 20) {
   return text.split('\n').map(line => {
     const sentences = line.split(/(?<=。)/);
     const result = [];
@@ -577,7 +586,6 @@ async function addTomorrowCandidates(goalId) {
   const ans = qa.answers[goalId];
   if (!g || !ans) return;
 
-  // ローディング表示
   const loadingId = 'tomorrow-loading-' + goalId;
   const loadWrap = document.createElement('div');
   loadWrap.className = 'bubble-wrap bot'; loadWrap.id = loadingId;
@@ -586,28 +594,31 @@ async function addTomorrowCandidates(goalId) {
   document.getElementById('qa-messages').appendChild(loadWrap);
   scrollBottom();
 
-  const prompt = `あなたは目標達成コーチです。
-以下の情報をもとに、明日取り組むべき具体的な行動を3件だけ提案してください。
-
-【目標】${g.title}
-【目標の詳細】${g.desc || 'なし'}
-【今日の達成度】${ans.achievement}%
-【うまくいったこと】${ans.good || 'なし'}
-【できなかったこと】${ans.bad || 'なし'}
-
-出力形式（厳守）:
-1. （行動1）
-2. （行動2）
-3. （行動3）
-
-各行動は1文で。前置きや説明は不要。番号と行動だけを出力。`;
-
   try {
-    const result = await callAI(prompt);
+    // Cloudflare Worker経由でWorkers AIを呼び出す
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        goalTitle: g.title,
+        goalDesc: g.desc || '',
+        achievement: ans.achievement,
+        good: ans.good || '',
+        bad: ans.bad || '',
+      }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
     loadWrap.remove();
-    // 候補をパース
-    const lines = result.split('\n').map(l => l.trim()).filter(l => /^[1-3][\.\．]/.test(l));
-    const candidates = lines.map(l => l.replace(/^[1-3][\.\．]\s*/, '')).filter(Boolean).slice(0, 3);
+
+    let candidates = data.candidates || [];
+    // rawテキストからパース（フォールバック）
+    if (candidates.length === 0 && data.raw) {
+      candidates = data.raw.split('\n').map(l => l.trim())
+        .filter(l => /^[1-3][.\．]/.test(l))
+        .map(l => l.replace(/^[1-3][.\．]\s*/, '').trim())
+        .filter(Boolean).slice(0, 3);
+    }
     if (!candidates.length) return;
 
     const candWrap = document.createElement('div');
@@ -626,10 +637,16 @@ async function addTomorrowCandidates(goalId) {
     scrollBottom();
   } catch (e) {
     loadWrap.remove();
-    // エラー時は候補なしで続行（ユーザーが手入力）
+    const errWrap = document.createElement('div');
+    errWrap.className = 'bubble-wrap bot';
+    errWrap.innerHTML = `<div class="bubble-sender">ふりかえりBot</div>
+      <div class="bubble bot" style="font-size:12px;color:var(--ink3);">
+        💡 AI提案を取得できませんでした。直接入力してください。
+      </div>`;
+    document.getElementById('qa-messages').appendChild(errWrap);
+    scrollBottom();
   }
 }
-
 function selectCandidate(goalId, idx, text) {
   // チップを選択済みに
   document.querySelectorAll(`[id^="cand-${goalId}-"]`).forEach(el => el.classList.remove('used'));
