@@ -1,4 +1,4 @@
-# ふりかえりBot - Cloudflare Worker 設定ファイル
+# ふりかえりAPP - Cloudflare Worker 設定ファイル
 # デプロイ前に name を変更しても構いません
 
 name = "furikaeri-bot-api"
