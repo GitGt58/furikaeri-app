@@ -1,7 +1,24 @@
-// ===== WORKER URL =====
-// Cloudflare Workerのデプロイ後にURLを設定してください
-// 例: 'https://furikaeri-bot-api.YOUR_SUBDOMAIN.workers.dev'
-const WORKER_URL = 'https://furikaeri-bot-api.YOUR_SUBDOMAIN.workers.dev';
+// ===== CONFIG（settings.jsonから読み込み） =====
+// WORKER_URLなどの設定はsettings.jsonで管理します
+let CONFIG = {
+  WORKER_URL: '',
+  wrapLength: 20,
+  storageKey: 'furi_db',
+  backupIntervalDays: 7,
+};
+
+// settings.jsonを読み込んでからアプリを起動
+fetch('./settings.json')
+  .then(r => r.json())
+  .then(json => {
+    Object.assign(CONFIG, json);
+    init();
+  })
+  .catch(() => {
+    // 読み込み失敗時はデフォルト設定でそのまま起動
+    console.warn('settings.json の読み込みに失敗しました。デフォルト設定で起動します。');
+    init();
+  });
 
 // ===== STATE =====
 let db = { goals:[], sessions:[] };
@@ -132,7 +149,7 @@ function saveData() { localStorage.setItem('furi_db',JSON.stringify(db)); }
 
 // ===== AI提案が使えるか =====
 function aiAvailable() {
-  return WORKER_URL && !WORKER_URL.includes('YOUR_SUBDOMAIN');
+  return CONFIG.WORKER_URL && !CONFIG.WORKER_URL.includes('YOUR_SUBDOMAIN') && !CONFIG.WORKER_URL.includes('YOUR_WORKER_URL');
 }
 
 // ===== PAGE NAV =====
@@ -347,7 +364,7 @@ async function addTomorrowCandidates(goalId){
   scrollBottom();
 
   try {
-    const res = await fetch(WORKER_URL, {
+    const res = await fetch(CONFIG.WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -846,5 +863,3 @@ function showToast(msg){
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
-
-init();

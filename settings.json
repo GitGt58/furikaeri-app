@@ -1,27 +1,7 @@
 {
-  "_comment": "ふりかえりBot デフォルト設定。実際の設定はlocalStorageに保存されます。",
-  "provider": "cloud",
-  "cloudSvc": "claude",
-  "cloudModel": "claude-opus-4-5",
-  "apiKey": "",
-  "localEndpoint": "",
-  "localModel": "",
-  "aiSuggest": true,
-  "aiSummary": true,
-  "wrapLength": 30,
-  "storageKeys": {
-    "db": "furi_db",
-    "settings": "furi_cfg"
-  },
-  "supportedProviders": {
-    "cloud": {
-      "services": ["claude", "openai", "gemini"]
-    },
-    "local": {
-      "defaultEndpoints": {
-        "lmstudio": "http://localhost:1234/v1/chat/completions",
-        "ollama": "http://localhost:11434/v1/chat/completions"
-      }
-    }
-  }
+  "_comment": "ふりかえりBot 設定ファイル。WORKER_URLのみ編集してください。",
+  "WORKER_URL": "https://black-credit-3a3a.gooooo-y-4-2.workers.dev",
+  "wrapLength": 20,
+  "storageKey": "furi_db",
+  "backupIntervalDays": 7
 }
