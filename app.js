@@ -142,7 +142,15 @@ function showPage(tabEl) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   tabEl.classList.add('active');
-  if (name === 'furikaeri') renderQAStart();
+
+  if (name === 'furikaeri') {
+    // 振り返り進行中はqa-wrapをそのまま表示、終了済みならスタート画面に戻す
+    if (!qa.active) {
+      document.getElementById('qa-wrap').style.display = 'none';
+      document.getElementById('qa-start').style.display = 'block';
+      renderQAStart();
+    }
+  }
   if (name === 'history') renderHistory();
 }
 
