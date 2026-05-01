@@ -1,153 +1,162 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ふりかえりBot</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ふりかえりApp</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="logo">🎯</div>
-    <span class="app-title">ふりかえりBot</span>
-  </div>
-  <span id="today-lbl" style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;"></span>
-</div>
-
-<div class="nav-tabs">
-  <button class="nav-tab active" data-page="goals" onclick="showPage(this)">🎯 目標</button>
-  <button class="nav-tab" data-page="furikaeri" onclick="showPage(this)">✏️ 振り返り</button>
-  <button class="nav-tab" data-page="history" onclick="showPage(this)">📋 履歴</button>
-</div>
-
-<!-- ========== 目標 ========== -->
-<div class="page active" id="page-goals">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-    <div>
-      <div class="section-title">2ヶ月の目標</div>
-      <div class="section-sub" style="margin-bottom:0;">達成したい目標を登録してください</div>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">🎯</div>
+      <span class="app-title">ふりかえりApp</span>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="openGoalModal()">＋ 追加</button>
+    <span id="today-lbl" style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;"></span>
   </div>
-  <div id="goals-list"></div>
-  <div class="empty" id="goals-empty" style="display:none;">
-    <div class="empty-icon">🎯</div>
-    <div style="font-size:13px;">まだ目標がありません<br>「追加」ボタンから登録しましょう</div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="goals" onclick="showPage(this)">🎯 目標</button>
+    <button class="nav-tab" data-page="furikaeri" onclick="showPage(this)">✏️ 振り返り</button>
+    <button class="nav-tab" data-page="history" onclick="showPage(this)">📋 履歴</button>
   </div>
-</div>
 
-<!-- ========== 振り返り ========== -->
-<div class="page" id="page-furikaeri" style="padding:0;">
+  <!-- ========== 目標 ========== -->
+  <div class="page active" id="page-goals">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div>
+        <div class="section-title">2ヶ月の目標</div>
+        <div class="section-sub" style="margin-bottom:0;">達成したい目標を登録してください</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openGoalModal()">＋ 追加</button>
+    </div>
+    <div id="goals-list"></div>
+    <div class="empty" id="goals-empty" style="display:none;">
+      <div class="empty-icon">🎯</div>
+      <div style="font-size:13px;">まだ目標がありません<br>「追加」ボタンから登録しましょう</div>
+    </div>
+  </div>
 
-  <div id="qa-start" style="padding:20px;max-width:680px;margin:0 auto;">
-    <div class="section-title">今日の振り返り</div>
-    <div class="section-sub">全ての目標について1問1答で振り返ります</div>
-    <div id="qa-start-goals"></div>
-    <div class="empty" id="qa-empty" style="display:none;">
+  <!-- ========== 振り返り ========== -->
+  <div class="page" id="page-furikaeri" style="padding:0;">
+
+    <div id="qa-start" style="padding:20px;max-width:680px;margin:0 auto;">
+      <div class="section-title">今日の振り返り</div>
+      <div class="section-sub">全ての目標について1問1答で振り返ります</div>
+      <div id="qa-start-goals"></div>
+      <div class="empty" id="qa-empty" style="display:none;">
+        <div class="empty-icon">📋</div>
+        <div style="font-size:13px;">目標が登録されていません<br>「目標」タブから追加してください</div>
+      </div>
+      <button class="btn btn-primary btn-full" id="qa-start-btn" onclick="startQA()"
+        style="margin-top:14px;display:none;">
+        振り返りを始める →
+      </button>
+    </div>
+
+    <div id="qa-wrap" style="display:none;">
+      <div class="qa-progress-bar-wrap">
+        <div class="qa-progress-meta">
+          <span id="qa-prog-label">振り返り中...</span>
+          <span id="qa-prog-num" style="font-family:'DM Mono',monospace;">0%</span>
+        </div>
+        <div class="qa-bar-bg">
+          <div class="qa-bar-fg" id="qa-bar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="qa-messages" id="qa-messages"></div>
+      <div class="qa-input-area" id="qa-input-area">
+        <div class="qa-input-row">
+          <textarea class="qa-textarea" id="qa-textarea" rows="1" placeholder="回答を入力... (Shift+Enter で送信 / Enter で改行)"
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="qa-send-btn" id="qa-send" onclick="sendAnswer()">↑</button>
+        </div>
+        <div class="qa-hint" id="qa-hint">Shift+Enter で送信　/ Enter で改行</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 履歴 ========== -->
+  <div class="page" id="page-history">
+    <div class="section-title">振り返り履歴</div>
+    <div class="section-sub">過去の記録を確認できます</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <select id="hist-filter" onchange="renderHistory()" style="flex:1;">
+        <option value="">すべての日付</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 エクスポート</button>
+      <button class="btn btn-secondary btn-sm" onclick="triggerImport()">📥 インポート</button>
+      <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importData(this)">
+      <button class="btn btn-ghost btn-sm" style="color:var(--warn);" onclick="clearHistory()">🗑 削除</button>
+    </div>
+    <div id="history-list"></div>
+    <div class="empty" id="history-empty" style="display:none;">
       <div class="empty-icon">📋</div>
-      <div style="font-size:13px;">目標が登録されていません<br>「目標」タブから追加してください</div>
+      <div style="font-size:13px;">まだ記録がありません</div>
     </div>
-    <button class="btn btn-primary btn-full" id="qa-start-btn" onclick="startQA()" style="margin-top:14px;display:none;">
-      振り返りを始める →
-    </button>
   </div>
 
-  <div id="qa-wrap" style="display:none;">
-    <div class="qa-progress-bar-wrap">
-      <div class="qa-progress-meta">
-        <span id="qa-prog-label">振り返り中...</span>
-        <span id="qa-prog-num" style="font-family:'DM Mono',monospace;">0%</span>
+  <!-- ========== 目標モーダル ========== -->
+  <div class="overlay" id="goal-modal">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">目標を追加</div>
+      <div class="frow">
+        <label class="lbl">目標タイトル <span style="color:var(--warn)">*</span></label>
+        <input type="text" id="m-title" placeholder="例：体重を5キロ落とす、TOEIC700点取得">
       </div>
-      <div class="qa-bar-bg"><div class="qa-bar-fg" id="qa-bar" style="width:0%"></div></div>
-    </div>
-    <div class="qa-messages" id="qa-messages"></div>
-    <div class="qa-input-area" id="qa-input-area">
-      <div class="qa-input-row">
-        <textarea class="qa-textarea" id="qa-textarea" rows="1"
-          placeholder="回答を入力... (Shift+Enter で送信 / Enter で改行)"
-          onkeydown="handleKey(event)"
-          oninput="autoResize(this)"></textarea>
-        <button class="qa-send-btn" id="qa-send" onclick="sendAnswer()">↑</button>
+      <div class="frow">
+        <label class="lbl">目標の詳細・背景（任意）</label>
+        <textarea id="m-desc" rows="2" placeholder="例：健康診断でD判定。食事管理と週3回の運動を継続する"></textarea>
       </div>
-      <div class="qa-hint" id="qa-hint">Shift+Enter で送信　/ Enter で改行</div>
-    </div>
-  </div>
-</div>
-
-<!-- ========== 履歴 ========== -->
-<div class="page" id="page-history">
-  <div class="section-title">振り返り履歴</div>
-  <div class="section-sub">過去の記録を確認できます</div>
-  <div style="display:flex;gap:8px;margin-bottom:12px;">
-    <select id="hist-filter" onchange="renderHistory()" style="flex:1;"><option value="">すべての日付</option></select>
-    <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 エクスポート</button>
-    <button class="btn btn-ghost btn-sm" style="color:var(--warn);" onclick="clearHistory()">🗑 削除</button>
-  </div>
-  <div id="history-list"></div>
-  <div class="empty" id="history-empty" style="display:none;">
-    <div class="empty-icon">📋</div>
-    <div style="font-size:13px;">まだ記録がありません</div>
-  </div>
-</div>
-
-<!-- ========== 目標モーダル ========== -->
-<div class="overlay" id="goal-modal">
-  <div class="modal">
-    <div class="modal-title" id="modal-title">目標を追加</div>
-    <div class="frow">
-      <label class="lbl">目標タイトル <span style="color:var(--warn)">*</span></label>
-      <input type="text" id="m-title" placeholder="例：体重を5キロ落とす、TOEIC700点取得">
-    </div>
-    <div class="frow">
-      <label class="lbl">目標の詳細・背景（任意）</label>
-      <textarea id="m-desc" rows="2" placeholder="例：健康診断でD判定。食事管理と週3回の運動を継続する"></textarea>
-    </div>
-    <div class="frow">
-      <label class="lbl">カテゴリ</label>
-      <div class="chips">
-        <span class="chip sel" data-cat="health" onclick="selCat(this)">🏃 健康・運動</span>
-        <span class="chip" data-cat="study"  onclick="selCat(this)">📚 学習・スキル</span>
-        <span class="chip" data-cat="career" onclick="selCat(this)">💼 仕事・キャリア</span>
-        <span class="chip" data-cat="other"  onclick="selCat(this)">✨ その他</span>
-      </div>
-    </div>
-    <div class="frow" style="margin-bottom:0;">
-      <label class="lbl">期間</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div>
-          <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">開始日</div>
-          <input type="text" id="m-start" placeholder="2025/05/01">
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">終了日</div>
-          <input type="text" id="m-end" placeholder="2025/06/30">
+      <div class="frow">
+        <label class="lbl">カテゴリ</label>
+        <div class="chips">
+          <span class="chip sel" data-cat="health" onclick="selCat(this)">🏃 健康・運動</span>
+          <span class="chip" data-cat="study" onclick="selCat(this)">📚 学習・スキル</span>
+          <span class="chip" data-cat="career" onclick="selCat(this)">💼 仕事・キャリア</span>
+          <span class="chip" data-cat="other" onclick="selCat(this)">✨ その他</span>
         </div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeGoalModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="saveGoal()">保存</button>
+      <div class="frow" style="margin-bottom:0;">
+        <label class="lbl">期間</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">開始日</div>
+            <input type="text" id="m-start" placeholder="2025/05/01">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--ink3);margin-bottom:3px;">終了日</div>
+            <input type="text" id="m-end" placeholder="2025/06/30">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeGoalModal()">キャンセル</button>
+        <button class="btn btn-primary" onclick="saveGoal()">保存</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ========== 回答編集モーダル ========== -->
-<div class="overlay" id="edit-answer-modal">
-  <div class="modal">
-    <div class="modal-title" id="edit-modal-title">回答を修正</div>
-    <div id="edit-modal-body"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeEditModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="applyEdit()">修正を反映する</button>
+  <!-- ========== 回答編集モーダル ========== -->
+  <div class="overlay" id="edit-answer-modal">
+    <div class="modal">
+      <div class="modal-title" id="edit-modal-title">回答を修正</div>
+      <div id="edit-modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeEditModal()">キャンセル</button>
+        <button class="btn btn-primary" onclick="applyEdit()">修正を反映する</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <div class="toast" id="toast"></div>
 
   <script src="app.js"></script>
 </body>
+
 </html>
