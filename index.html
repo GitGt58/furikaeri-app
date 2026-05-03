@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ふりかえりBot</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
-  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -81,14 +81,13 @@
 <div class="page" id="page-history">
   <div class="section-title">振り返り履歴</div>
   <div class="section-sub">過去の記録を確認できます</div>
-  <div style="display:flex;gap:8px;margin-bottom:12px;">
-    <select id="hist-filter" onchange="renderHistory()" style="flex:1;"><option value="">すべての日付</option></select>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <select id="hist-filter" onchange="renderHistory()" style="flex:1;min-width:140px;"><option value="">すべての日付</option></select>
     <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 エクスポート</button>
     <button class="btn btn-secondary btn-sm" onclick="triggerImport()">📥 インポート</button>
     <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importData(this)">
   </div>
-  <!-- 選択操作バー -->
-  <div id="hist-select-bar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);">
+  <div id="hist-select-bar" style="display:none;align-items:center;justify-content:space-between;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);">
     <div style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="hist-check-all" onchange="toggleSelectAll(this)" style="width:16px;height:16px;cursor:pointer;">
       <label for="hist-check-all" style="font-size:12px;color:var(--ink2);cursor:pointer;">すべて選択</label>
@@ -97,8 +96,6 @@
       <span id="hist-select-count" style="font-size:12px;color:var(--ink3);">0件選択中</span>
       <button class="btn btn-danger btn-sm" id="hist-delete-btn" onclick="deleteSelected()" disabled style="opacity:.4;">🗑 削除</button>
     </div>
-  </div>
-
   </div>
   <div id="history-list"></div>
   <div class="empty" id="history-empty" style="display:none;">
@@ -162,6 +159,21 @@
 
 <div class="toast" id="toast"></div>
 
-  <script src="app.js"></script>
+<!-- ===== JavaScript：読み込み順序が重要 ===== -->
+<!-- 1. core.js: CONFIG, データ管理, 共通ユーティリティ -->
+<script src="js/core.js"></script>
+<!-- 2. ui-common.js: ページ切替, バブル, モーダル, トースト -->
+<script src="js/ui-common.js"></script>
+<!-- 3. 各タブ -->
+<script src="js/tab-goals.js"></script>
+<script src="js/tab-furikaeri.js"></script>
+<script src="js/tab-history.js"></script>
+<!-- 4. 起動 -->
+<script>
+  fetch('./settings.json')
+    .then(r => r.json())
+    .then(json => { Object.assign(CONFIG, json); init(); })
+    .catch(() => { console.warn('settings.json読込失敗'); init(); });
+</script>
 </body>
 </html>

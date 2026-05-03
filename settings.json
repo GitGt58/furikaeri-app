@@ -1,6 +1,6 @@
 {
   "_comment": "ふりかえりBot 設定ファイル。WORKER_URLのみ編集してください。",
-  "WORKER_URL": "https://black-credit-3a3a.gooooo-y-4-2.workers.dev",
+  "WORKER_URL": "https://YOUR_WORKER_URL.workers.dev",
   "wrapLength": 20,
   "storageKey": "furi_db",
   "backupIntervalDays": 7
