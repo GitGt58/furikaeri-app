@@ -53,6 +53,9 @@ function addBubble(role, text, bubbleId) {
 
     const innerWrap = document.createElement('div');
     innerWrap.style.position = 'relative';
+    innerWrap.style.maxWidth = '100%';
+    innerWrap.style.display = 'flex';
+    innerWrap.style.justifyContent = 'flex-end';
     innerWrap.appendChild(editBtn);
     innerWrap.appendChild(bubble);
 
