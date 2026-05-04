@@ -72,31 +72,30 @@ const dateStr = d => {
 const esc = s => String(s || '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// テキスト整形: 1.\n保持 2.。の後で改行 3.20文字超えで強制改行
-function wrapLong(text, n) {
-  n = n || CONFIG.wrapLength || 20;
+// テキスト整形（仕様）
+//   1. ユーザーが意図的に入れた\nを保持
+//   2. 「。」の後で改行（行末の。は除く）
+//   3. 1行あたり30文字を超えたら強制改行
+//   ※ 画面幅を超えた場合の折り返しはCSS（overflow-wrap:anywhere）が担当
+function wrapLong(text) {
+  const n = CONFIG.wrapLength || 30;
   return text.split('\n').map(line => {
-    const sentences = line.split(/(?<=。)/);
-    const result = [];
-    let current = '';
-    for (const seg of sentences) {
-      if ((current + seg).length > n && current.length > 0) {
-        result.push(current);
-        current = seg;
-      } else {
-        current += seg;
+    // 「。」の後で改行（行末の「。」は無視）
+    const withPeriodBreaks = line.replace(/。(?!$)/g, '。\n');
+    // 各行を30文字で強制改行
+    return withPeriodBreaks.split('\n').map(seg => {
+      const chunks = [];
+      let cur = '';
+      for (const ch of seg) {
+        cur += ch;
+        if (cur.length >= n) {
+          chunks.push(cur);
+          cur = '';
+        }
       }
-      if (current.endsWith('。')) {
-        result.push(current);
-        current = '';
-      }
-    }
-    while (current.length > n) {
-      result.push(current.slice(0, n));
-      current = current.slice(n);
-    }
-    if (current) result.push(current);
-    return result.join('\n');
+      if (cur) chunks.push(cur);
+      return chunks.length ? chunks.join('\n') : '';
+    }).join('\n');
   }).join('\n');
 }
 
