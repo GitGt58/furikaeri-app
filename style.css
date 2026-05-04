@@ -470,9 +470,8 @@ textarea {
    max-width:75%          → 画面幅の75%を超えないよう上限を設定
    wrapLong(\nで意図的改行)とCSS折り返しの2段構えで「絶対にはみ出さない」を保証 */
 /* ユーザーバブル：
-   - inline-blockで内容に合わせて伸縮
-   - max-widthで画面幅の75%を超えない
-   - JSのwrapLong(30文字)とCSSの自動折り返しの2段構え */
+   親の innerWrap (max-width:75%) で幅が制限される。
+   .bubble の max-width:85% を無効化して親に従う */
 .bubble.user {
   background: var(--accent);
   color: #fff;
@@ -480,8 +479,7 @@ textarea {
   white-space: pre-wrap;
   overflow-wrap: break-word;
   word-break: normal;
-  max-width: 75%;
-  display: inline-block;
+  max-width: 100%;
 }
 
 .bubble.system {
