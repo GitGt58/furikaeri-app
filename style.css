@@ -469,14 +469,23 @@ textarea {
    overflow-wrap:anywhere → 連続文字列でもバブル幅を超えたら強制的に折り返す
    max-width:75%          → 画面幅の75%を超えないよう上限を設定
    wrapLong(\nで意図的改行)とCSS折り返しの2段構えで「絶対にはみ出さない」を保証 */
+/* ユーザーバブル：
+   - 短いテキストは1行で収まる
+   - 長文はバブル幅で自動折り返し
+   - JSのwrapLong(30文字)で意図的改行を入れている */
 .bubble.user {
   background: var(--accent);
   color: #fff;
   border-bottom-right-radius: 4px;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  /* JSの\nを尊重しつつ、必要に応じて折り返し */
+  overflow-wrap: break-word;
+  /* anywhereではなくbreak-word（短文を割らない） */
+  word-break: normal;
+  /* normalに戻して通常の折り返し */
   max-width: 75%;
+  width: fit-content;
+  /* テキスト幅に合わせる（短文は短いまま） */
 }
 
 .bubble.system {
