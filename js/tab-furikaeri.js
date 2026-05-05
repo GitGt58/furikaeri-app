@@ -23,7 +23,7 @@ function renderQAStart() {
 
   cont.innerHTML = db.goals.map(g => `
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 15px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">${{ health:'🏃', study:'📚', career:'💼', other:'✨' }[g.cat] || '🎯'}</span>
+      <span style="font-size:18px;">${{ health: '🏃', study: '📚', career: '💼', other: '✨' }[g.cat] || '🎯'}</span>
       <div>
         <div style="font-size:13px;font-weight:700;">${esc(g.title)}</div>
         <div style="font-size:11px;color:var(--ink3);">${g.start} 〜 ${g.end}</div>
@@ -35,7 +35,8 @@ function renderQAStart() {
 function buildQuestions() {
   const qs = [];
   db.goals.forEach(g => {
-    qa.answers[g.id] = { goalId: g.id, goalTitle: g.title, achievement: 60, good: '', bad: '', tomorrow: '' };
+    const initialAch = getLastAchievement(g.id);
+    qa.answers[g.id] = { goalId: g.id, goalTitle: g.title, achievement: initialAch, good: '', bad: '', tomorrow: '' };
     qs.push({ goalId: g.id, type: 'section_start', goalTitle: g.title });
     qs.push({ goalId: g.id, type: 'slider', key: 'achievement', text: `【${g.title}】\n\n今日の達成度を教えてください。` });
     qs.push({ goalId: g.id, type: 'text', key: 'good', text: `うまくいったことや、良かったことを教えてください。\n\n（思い浮かばなければ「特になし」と入力してください）` });
@@ -52,7 +53,7 @@ function startQA() {
   qa.currentIdx = 0;
   qa.answers = {};
   db.goals.forEach(g => {
-    qa.answers[g.id] = { goalId: g.id, goalTitle: g.title, achievement: 60, good: '', bad: '', tomorrow: '' };
+    qa.answers[g.id] = { goalId: g.id, goalTitle: g.title, achievement: getLastAchievement(g.id), good: '', bad: '', tomorrow: '' };
   });
 
   document.getElementById('qa-start').style.display = 'none';
@@ -96,7 +97,7 @@ function stepNext() {
 
 function updateProgress() {
   const total = qa.questions.filter(q => q.type !== 'section_start').length;
-  const done  = qa.questions.slice(0, qa.currentIdx).filter(q => q.type !== 'section_start').length;
+  const done = qa.questions.slice(0, qa.currentIdx).filter(q => q.type !== 'section_start').length;
   const pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById('qa-bar').style.width = pct + '%';
   document.getElementById('qa-prog-num').textContent = pct + '%';
@@ -143,8 +144,31 @@ function sendAnswer() {
 }
 
 // ========== スライダーバブル ==========
+// 該当目標の前回の達成度を取得（記録がなければ60を返す）
+function getLastAchievement(goalId) {
+  // sessionsを新しい順に走査して、該当goalIdの最初の達成度を返す
+  for (let i = db.sessions.length - 1; i >= 0; i--) {
+    const session = db.sessions[i];
+    const ans = (session.answers || []).find(a => a.goalId === goalId);
+    if (ans && typeof ans.achievement === 'number') {
+      return ans.achievement;
+    }
+  }
+  return 60; // デフォルト値
+}
+
 function addSliderBubble(q) {
-  qa.sliderVal = 60;
+  // 前回の達成度を初期値として使用
+  const initialVal = getLastAchievement(q.goalId);
+  qa.sliderVal = initialVal;
+  qa.answers[q.goalId].achievement = initialVal;
+
+  // 前回記録がある場合は表示用ラベルを準備
+  const hasPrevious = db.sessions.some(s => (s.answers || []).some(a => a.goalId === q.goalId));
+  const prevLabel = hasPrevious
+    ? `<div style="font-size:11px;color:var(--ink3);text-align:center;margin-bottom:6px;">前回：${initialVal}%</div>`
+    : '';
+
   const id = 'slider_' + Date.now();
   const wrap = document.createElement('div');
   wrap.className = 'bubble-wrap bot';
@@ -152,8 +176,9 @@ function addSliderBubble(q) {
     <div class="bubble-sender">ふりかえりBot</div>
     <div class="bubble bot slider-bubble" style="min-width:260px;max-width:90%;">
       <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;margin-bottom:12px;">${esc(q.text)}</div>
-      <div class="slider-val-big" id="${id}-val">60%</div>
-      <input class="qa-slider" type="range" min="0" max="100" value="60" id="${id}-range"
+      ${prevLabel}
+      <div class="slider-val-big" id="${id}-val">${initialVal}%</div>
+      <input class="qa-slider" type="range" min="0" max="100" value="${initialVal}" id="${id}-range"
         oninput="qa.sliderVal=this.value;document.getElementById('${id}-val').textContent=this.value+'%'">
       <div class="slider-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
       <button class="btn btn-primary btn-sm" style="margin-top:14px;width:100%;justify-content:center;"
@@ -195,11 +220,11 @@ async function addTomorrowCandidates(goalId) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        goalTitle:   g.title,
-        goalDesc:    g.desc || '',
+        goalTitle: g.title,
+        goalDesc: g.desc || '',
         achievement: ans.achievement,
-        good:        ans.good || '',
-        bad:         ans.bad  || '',
+        good: ans.good || '',
+        bad: ans.bad || '',
       }),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -297,8 +322,8 @@ function generateSummaryTemplate(answers, today) {
   let txt = `📅 ${today} の振り返り\n`;
   answers.forEach(a => {
     txt += `\n▍${a.goalTitle}　達成度：${a.achievement}%\n`;
-    if (a.good)     txt += `　○ ${a.good}\n`;
-    if (a.bad)      txt += `　× ${a.bad}\n`;
+    if (a.good) txt += `　○ ${a.good}\n`;
+    if (a.bad) txt += `　× ${a.bad}\n`;
     if (a.tomorrow) txt += `　→ 明日：${a.tomorrow}\n`;
   });
   return txt.trim();
