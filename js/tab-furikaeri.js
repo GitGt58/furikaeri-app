@@ -23,7 +23,7 @@ function renderQAStart() {
 
   cont.innerHTML = db.goals.map(g => `
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 15px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">${{ health: '🏃', study: '📚', career: '💼', other: '✨' }[g.cat] || '🎯'}</span>
+      <span style="font-size:18px;">${{ health:'🏃', study:'📚', career:'💼', other:'✨' }[g.cat] || '🎯'}</span>
       <div>
         <div style="font-size:13px;font-weight:700;">${esc(g.title)}</div>
         <div style="font-size:11px;color:var(--ink3);">${g.start} 〜 ${g.end}</div>
@@ -36,12 +36,31 @@ function buildQuestions() {
   const qs = [];
   db.goals.forEach(g => {
     const initialAch = getLastAchievement(g.id);
-    qa.answers[g.id] = { goalId: g.id, goalTitle: g.title, achievement: initialAch, good: '', bad: '', tomorrow: '' };
+    // 振り返り項目を取得（カスタム or デフォルト）
+    const questions = getQuestionsForGoal(g);
+    qa.answers[g.id] = {
+      goalId: g.id,
+      goalTitle: g.title,
+      achievement: initialAch,
+      responses: {},  // 動的キーで回答を保存
+    };
+    // セクション開始
     qs.push({ goalId: g.id, type: 'section_start', goalTitle: g.title });
+    // 達成度（必須・固定）
     qs.push({ goalId: g.id, type: 'slider', key: 'achievement', text: `【${g.title}】\n\n今日の達成度を教えてください。` });
-    qs.push({ goalId: g.id, type: 'text', key: 'good', text: `うまくいったことや、良かったことを教えてください。\n\n（思い浮かばなければ「特になし」と入力してください）` });
-    qs.push({ goalId: g.id, type: 'text', key: 'bad', text: `できなかったことや、改善したい点はありますか？` });
-    qs.push({ goalId: g.id, type: 'tomorrow', key: 'tomorrow', text: `明日やることを教えてください。` });
+    // カスタム項目を順番に
+    questions.forEach((q, idx) => {
+      const isLast = idx === questions.length - 1;
+      // 最後の項目だけ「明日提案AI」を出すかは、項目labelに「明日」が含まれているかで判定
+      const isTomorrow = q.label.includes('明日') || q.label.toLowerCase().includes('try') || q.label.toLowerCase().includes('action');
+      qs.push({
+        goalId: g.id,
+        type: isTomorrow && isLast ? 'tomorrow' : 'text',
+        key: q.id,
+        label: q.label,
+        text: q.text,
+      });
+    });
   });
   return qs;
 }
@@ -53,7 +72,12 @@ function startQA() {
   qa.currentIdx = 0;
   qa.answers = {};
   db.goals.forEach(g => {
-    qa.answers[g.id] = { goalId: g.id, goalTitle: g.title, achievement: getLastAchievement(g.id), good: '', bad: '', tomorrow: '' };
+    qa.answers[g.id] = {
+      goalId: g.id,
+      goalTitle: g.title,
+      achievement: getLastAchievement(g.id),
+      responses: {},
+    };
   });
 
   document.getElementById('qa-start').style.display = 'none';
@@ -97,7 +121,7 @@ function stepNext() {
 
 function updateProgress() {
   const total = qa.questions.filter(q => q.type !== 'section_start').length;
-  const done = qa.questions.slice(0, qa.currentIdx).filter(q => q.type !== 'section_start').length;
+  const done  = qa.questions.slice(0, qa.currentIdx).filter(q => q.type !== 'section_start').length;
   const pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById('qa-bar').style.width = pct + '%';
   document.getElementById('qa-prog-num').textContent = pct + '%';
@@ -137,7 +161,7 @@ function sendAnswer() {
 
   ta.value = '';
   autoResize(ta);
-  qa.answers[q.goalId][q.key] = val;
+  qa.answers[q.goalId].responses[q.key] = val;
   setInputDisabled(true);
   qa.currentIdx++;
   setTimeout(() => stepNext(), 500);
@@ -178,7 +202,7 @@ function addSliderBubble(q) {
       <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;margin-bottom:12px;">${esc(q.text)}</div>
       ${prevLabel}
       <div class="slider-val-big" id="${id}-val">${initialVal}%</div>
-      <input class="qa-slider" type="range" min="0" max="100" value="${initialVal}" id="${id}-range"
+      <input class="qa-slider" type="range" min="0" max="100" step="10" value="${initialVal}" id="${id}-range"
         oninput="qa.sliderVal=this.value;document.getElementById('${id}-val').textContent=this.value+'%'">
       <div class="slider-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
       <button class="btn btn-primary btn-sm" style="margin-top:14px;width:100%;justify-content:center;"
@@ -216,15 +240,23 @@ async function addTomorrowCandidates(goalId) {
   scrollBottom();
 
   try {
+    // カスタム項目に対応：これまでの回答をすべて整形してAIに送る
+    const responsesArr = Object.entries(ans.responses || {})
+      .filter(([k, v]) => v && v.trim())
+      .map(([k, v]) => v);
+    // 互換のため、3項目以下の場合はgood/badも探す
+    const goodVal = ans.responses?.good || ans.good || responsesArr[0] || '';
+    const badVal  = ans.responses?.bad  || ans.bad  || responsesArr[1] || '';
+
     const res = await fetch(CONFIG.WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        goalTitle: g.title,
-        goalDesc: g.desc || '',
+        goalTitle:   g.title,
+        goalDesc:    g.desc || '',
         achievement: ans.achievement,
-        good: ans.good || '',
-        bad: ans.bad || '',
+        good:        goodVal,
+        bad:         badVal,
       }),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -317,14 +349,27 @@ async function finishQA() {
   qa.active = false;
 }
 
-// シンプルな箇条書き形式（Slack向け）
+// シンプルな箇条書き形式（Slack向け）：カスタム項目に対応
 function generateSummaryTemplate(answers, today) {
   let txt = `📅 ${today} の振り返り\n`;
   answers.forEach(a => {
     txt += `\n▍${a.goalTitle}　達成度：${a.achievement}%\n`;
-    if (a.good) txt += `　○ ${a.good}\n`;
-    if (a.bad) txt += `　× ${a.bad}\n`;
-    if (a.tomorrow) txt += `　→ 明日：${a.tomorrow}\n`;
+    // 該当目標のカスタム項目を取得
+    const goal = db.goals.find(g => g.id === a.goalId);
+    const questions = goal ? getQuestionsForGoal(goal) : [];
+    // 各項目の回答を順番に出力
+    questions.forEach(q => {
+      const val = getResponseValue(a, q.id);
+      if (!val) return;
+      // 項目labelに応じて記号を選ぶ（明日=→、課題=×、それ以外=○）
+      let prefix = '○';
+      if (q.label.includes('明日') || q.label.toLowerCase().includes('try') || q.label.toLowerCase().includes('action')) {
+        prefix = '→';
+      } else if (q.label.includes('改善') || q.label.includes('できなかった') || q.label.toLowerCase().includes('problem')) {
+        prefix = '×';
+      }
+      txt += `　${prefix} ${q.label}：${val}\n`;
+    });
   });
   return txt.trim();
 }

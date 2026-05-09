@@ -61,6 +61,89 @@ function aiAvailable() {
     && !CONFIG.WORKER_URL.includes('YOUR_WORKER_URL');
 }
 
+// ========== 振り返り項目テンプレート ==========
+// label = 項目名（履歴・サマリーで表示）
+// text  = ユーザーへの質問文（バブルで表示）
+const QUESTION_TEMPLATES = {
+  standard: {
+    name: '標準（デフォルト）',
+    desc: 'うまくいったこと/改善点/明日',
+    items: [
+      { label: 'うまくいったこと', text: 'うまくいったことや、良かったことを教えてください。\n\n（思い浮かばなければ「特になし」と入力してください）' },
+      { label: 'できなかったこと', text: 'できなかったことや、改善したい点はありますか？' },
+      { label: '明日やること',     text: '明日やることを教えてください。' },
+    ],
+  },
+  kpt: {
+    name: 'KPT',
+    desc: 'Keep / Problem / Try',
+    items: [
+      { label: 'Keep',    text: '続けたいこと（うまくいっていること）は？' },
+      { label: 'Problem', text: '課題や問題点は？' },
+      { label: 'Try',     text: '次に試してみたいことは？' },
+    ],
+  },
+  ywt: {
+    name: 'YWT',
+    desc: 'やったこと / わかったこと / つぎやること',
+    items: [
+      { label: 'やったこと',   text: '今日やったことは？' },
+      { label: 'わかったこと', text: 'やってみてわかったこと・気付きは？' },
+      { label: 'つぎやること', text: '次にやることは？' },
+    ],
+  },
+  kpta: {
+    name: 'KPTA',
+    desc: 'Keep / Problem / Try / Action',
+    items: [
+      { label: 'Keep',    text: '続けたいことは?' },
+      { label: 'Problem', text: '課題や問題点は?' },
+      { label: 'Try',     text: '次に試してみたいことは?' },
+      { label: 'Action',  text: '具体的にどう行動する?' },
+    ],
+  },
+  fdl: {
+    name: 'FDL',
+    desc: 'Fun / Done / Learn',
+    items: [
+      { label: 'Fun',   text: '楽しかったこと・嬉しかったことは?' },
+      { label: 'Done',  text: '今日できたことは?' },
+      { label: 'Learn', text: '学んだこと・気付きは?' },
+    ],
+  },
+};
+
+// 設定可能な項目数の上限（達成度を除く）
+const MAX_CUSTOM_QUESTIONS = 5;
+
+// ========== 振り返り項目の取得（互換性レイヤー） ==========
+// 目標の questions 配列を取得する。未設定の古い目標はstandardテンプレートを返す。
+// 戻り値の各item: { id, label, text }
+function getQuestionsForGoal(goal) {
+  // ① カスタム項目が設定済み → そのまま使う
+  if (goal.questions && Array.isArray(goal.questions) && goal.questions.length > 0) {
+    return goal.questions;
+  }
+  // ② 未設定 → standardテンプレートをIDつきで返す（互換性）
+  return QUESTION_TEMPLATES.standard.items.map((item, idx) => ({
+    id: ['good', 'bad', 'tomorrow'][idx], // 旧キーと互換
+    label: item.label,
+    text:  item.text,
+  }));
+}
+
+// ========== 履歴回答の取得（互換性レイヤー） ==========
+// answers配列の1要素から、特定項目IDの回答テキストを取得
+// 旧データ（answers[i].good/bad/tomorrow）と新データ（answers[i].responses[id]）の両方に対応
+function getResponseValue(answer, questionId) {
+  // 新形式: answer.responses[questionId]
+  if (answer.responses && typeof answer.responses === 'object') {
+    return answer.responses[questionId] || '';
+  }
+  // 旧形式: answer[questionId] が直接フィールドにある（good/bad/tomorrow）
+  return answer[questionId] || '';
+}
+
 // ========== ユーティリティ ==========
 const p = n => String(n).padStart(2, '0');
 

@@ -106,7 +106,7 @@ function openEditModal(bubbleId) {
     const cur = ans.achievement ?? 60;
     body.innerHTML = `<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">スライダーで達成度を変更してください</div>
       <div class="edit-slider-val" id="edit-slider-val">${cur}%</div>
-      <input class="edit-slider" type="range" min="0" max="100" value="${cur}" id="edit-slider-input"
+      <input class="edit-slider" type="range" min="0" max="100" step="10" value="${cur}" id="edit-slider-input"
         oninput="document.getElementById('edit-slider-val').textContent=this.value+'%'">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:4px;font-family:'DM Mono',monospace;"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>`;
   } else {
