@@ -26,26 +26,99 @@ function renderHistory() {
   empty.style.display = 'none';
   selectBar.style.display = 'flex';
 
-  list.innerHTML = filtered.map(s => {
-    const achList = (s.answers || [])
-      .map(a => `<span class="hist-ach">${esc(a.goalTitle || '')} ${a.achievement}</span>`)
-      .join(' ');
-    return `<div class="hist-item" data-id="${s.id}" onclick="toggleHistItem(this)" style="cursor:pointer;">
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <input type="checkbox" class="hist-checkbox" data-id="${s.id}"
-          style="width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer;"
-          onclick="event.stopPropagation();onHistCheckChange()">
-        <div style="flex:1;">
-          <div class="hist-date">${s.date}</div>
-          <div style="margin-bottom:6px;">${achList}</div>
-          <div class="hist-summary">${esc(s.summary || '')}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  list.innerHTML = filtered.map(s => renderHistItem(s)).join('');
 
   document.getElementById('hist-check-all').checked = false;
   updateSelectBar();
+}
+
+// 履歴1件のHTML生成
+function renderHistItem(s) {
+  // 各目標の構造化表示
+  const goalsHtml = (s.answers || []).map(a => renderHistGoal(a)).join('');
+  // Slack用サマリー（コピー用にdata属性に保存）
+  const summaryEsc = esc(s.summary || '');
+
+  return `<div class="hist-item" data-id="${s.id}" onclick="toggleHistItem(this)" style="cursor:pointer;">
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <input type="checkbox" class="hist-checkbox" data-id="${s.id}"
+        style="width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer;"
+        onclick="event.stopPropagation();onHistCheckChange()">
+      <div style="flex:1;min-width:0;">
+        <div class="hist-date">${s.date}</div>
+        <div class="hist-goals">${goalsHtml}</div>
+        ${s.summary ? `
+          <details class="hist-summary-details" onclick="event.stopPropagation()" style="margin-top:10px;">
+            <summary style="cursor:pointer;font-size:12px;color:var(--ink3);user-select:none;">📋 Slack用サマリー</summary>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+              <pre class="hist-summary-text" style="font-size:12px;line-height:1.7;white-space:pre-wrap;background:var(--surface);padding:10px 12px;border-radius:var(--r-sm);margin:0;font-family:'Noto Sans JP',sans-serif;color:var(--ink2);">${summaryEsc}</pre>
+              <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();copyHistSummary('${s.id}')" style="align-self:flex-start;">📋 コピー</button>
+            </div>
+          </details>
+        ` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// 1目標分の構造化表示
+function renderHistGoal(a) {
+  const goal = db.goals.find(g => g.id === a.goalId);
+  const questions = goal ? getQuestionsForGoal(goal) : null;
+
+  // 項目リストを生成（カスタム項目があれば優先、なければ旧キーで表示）
+  let itemsHtml = '';
+  if (questions) {
+    itemsHtml = questions.map(q => {
+      const val = getResponseValue(a, q.id);
+      if (!val) return '';
+      return `<div class="hist-item-row">
+        <span class="hist-item-label">${esc(q.label)}</span>
+        <span class="hist-item-value">${esc(val)}</span>
+      </div>`;
+    }).join('');
+  } else {
+    // 目標自体が削除されている古いデータ：旧キーで表示
+    const oldKeys = [
+      { id: 'good',     label: 'うまくいったこと' },
+      { id: 'bad',      label: 'できなかったこと' },
+      { id: 'tomorrow', label: '明日やること' },
+    ];
+    itemsHtml = oldKeys.map(k => {
+      const val = getResponseValue(a, k.id);
+      if (!val) return '';
+      return `<div class="hist-item-row">
+        <span class="hist-item-label">${esc(k.label)}</span>
+        <span class="hist-item-value">${esc(val)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  return `<div class="hist-goal">
+    <div class="hist-goal-head">
+      <span class="hist-goal-title">${esc(a.goalTitle || '(目標なし)')}</span>
+      <span class="hist-goal-ach">達成度：${a.achievement ?? '-'}</span>
+    </div>
+    ${itemsHtml ? `<div class="hist-goal-body">${itemsHtml}</div>` : ''}
+  </div>`;
+}
+
+// Slack用サマリーをコピー
+function copyHistSummary(sessionId) {
+  const session = db.sessions.find(s => s.id === sessionId);
+  if (!session || !session.summary) return;
+  const text = session.summary;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('コピーしました！Slackに貼り付けてください');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('コピーしました');
+  });
 }
 
 // ========== 選択操作 ==========
