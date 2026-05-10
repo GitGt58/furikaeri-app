@@ -20,7 +20,10 @@ function renderGoals() {
 
   list.innerHTML = db.goals.map(g => {
     const recs = db.sessions.flatMap(s => s.answers || []).filter(a => a.goalId === g.id);
-    const avg = recs.length ? Math.round(recs.reduce((s, r) => s + (r.achievement || 0), 0) / recs.length) : 0;
+    // avg: 0-10 スケール（小数点1桁）
+    const avg = recs.length ? Math.round(recs.reduce((s, r) => s + (r.achievement || 0), 0) / recs.length * 10) / 10 : 0;
+    // barWidth: 0-100% スケール（バー幅用）
+    const barWidth = avg * 10;
     return `<div class="goal-item">
       <div class="goal-item-top">
         <div>
@@ -33,8 +36,8 @@ function renderGoals() {
           <button class="btn btn-ghost btn-sm btn-icon" style="color:var(--warn);" onclick="deleteGoal('${g.id}')">🗑</button>
         </div>
       </div>
-      <div class="goal-prog-wrap"><div class="goal-prog" style="width:${avg}%"></div></div>
-      <div style="font-size:11px;color:var(--ink3);margin-top:4px;font-family:'DM Mono',monospace;">平均達成度 ${avg}%</div>
+      <div class="goal-prog-wrap"><div class="goal-prog" style="width:${barWidth}%"></div></div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px;font-family:'DM Mono',monospace;">平均達成度 ${avg}</div>
       ${g.desc ? `<div style="font-size:12px;color:var(--ink2);margin-top:8px;">${esc(g.desc)}</div>` : ''}
     </div>`;
   }).join('');

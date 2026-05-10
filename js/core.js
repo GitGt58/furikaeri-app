@@ -48,6 +48,21 @@ function loadData() {
     db = { goals: [], sessions: [] };
   }
   if (!db.sessions) db.sessions = [];
+
+  // 達成度を 0-100 スケールから 0-10 スケールに自動移行
+  // 既存データが10より大きい場合は 0-100 スケールとみなして変換
+  let migrated = false;
+  db.sessions.forEach(s => {
+    (s.answers || []).forEach(a => {
+      if (typeof a.achievement === 'number' && a.achievement > 10) {
+        a.achievement = Math.round(a.achievement / 10);
+        migrated = true;
+      }
+    });
+  });
+  if (migrated) {
+    saveData();
+  }
 }
 
 function saveData() {

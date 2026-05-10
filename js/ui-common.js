@@ -103,12 +103,12 @@ function openEditModal(bubbleId) {
 
   const body = document.getElementById('edit-modal-body');
   if (key === 'achievement') {
-    const cur = ans.achievement ?? 60;
+    const cur = ans.achievement ?? 6;
     body.innerHTML = `<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">スライダーで達成度を変更してください</div>
-      <div class="edit-slider-val" id="edit-slider-val">${cur}%</div>
-      <input class="edit-slider" type="range" min="0" max="100" step="10" value="${cur}" id="edit-slider-input"
-        oninput="document.getElementById('edit-slider-val').textContent=this.value+'%'">
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:4px;font-family:'DM Mono',monospace;"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>`;
+      <div class="edit-slider-val" id="edit-slider-val">${cur}</div>
+      <input class="edit-slider" type="range" min="0" max="10" step="1" value="${cur}" id="edit-slider-input"
+        oninput="document.getElementById('edit-slider-val').textContent=this.value">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:4px;font-family:'DM Mono',monospace;"><span>0</span><span>2</span><span>5</span><span>8</span><span>10</span></div>`;
   } else {
     const cur = ans[key] || '';
     body.innerHTML = `<div style="font-size:12px;color:var(--ink3);margin-bottom:6px;">内容を編集してください</div>
@@ -131,7 +131,7 @@ function applyEdit() {
     newVal = parseInt(document.getElementById('edit-slider-input').value);
     qa.answers[goalId].achievement = newVal;
     const el = document.getElementById(`bubble-text-${goalId}__achievement`);
-    if (el) el.textContent = wrapLong(`達成度：${newVal}%`);
+    if (el) el.textContent = wrapLong(`達成度：${newVal}`);
   } else {
     newVal = document.getElementById('edit-text-input').value.trim();
     if (!newVal) { showToast('内容を入力してください'); return; }

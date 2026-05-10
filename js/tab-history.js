@@ -28,7 +28,7 @@ function renderHistory() {
 
   list.innerHTML = filtered.map(s => {
     const achList = (s.answers || [])
-      .map(a => `<span class="hist-ach">${esc(a.goalTitle || '')} ${a.achievement}%</span>`)
+      .map(a => `<span class="hist-ach">${esc(a.goalTitle || '')} ${a.achievement}</span>`)
       .join(' ');
     return `<div class="hist-item" data-id="${s.id}" onclick="toggleHistItem(this)" style="cursor:pointer;">
       <div style="display:flex;align-items:flex-start;gap:10px;">

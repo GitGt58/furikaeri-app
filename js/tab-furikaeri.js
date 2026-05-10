@@ -168,7 +168,7 @@ function sendAnswer() {
 }
 
 // ========== スライダーバブル ==========
-// 該当目標の前回の達成度を取得（記録がなければ60を返す）
+// 該当目標の前回の達成度を取得（記録がなければ6を返す）
 function getLastAchievement(goalId) {
   // sessionsを新しい順に走査して、該当goalIdの最初の達成度を返す
   for (let i = db.sessions.length - 1; i >= 0; i--) {
@@ -178,7 +178,7 @@ function getLastAchievement(goalId) {
       return ans.achievement;
     }
   }
-  return 60; // デフォルト値
+  return 6; // デフォルト値（0-10スケール）
 }
 
 function addSliderBubble(q) {
@@ -190,7 +190,7 @@ function addSliderBubble(q) {
   // 前回記録がある場合は表示用ラベルを準備
   const hasPrevious = db.sessions.some(s => (s.answers || []).some(a => a.goalId === q.goalId));
   const prevLabel = hasPrevious
-    ? `<div style="font-size:11px;color:var(--ink3);text-align:center;margin-bottom:6px;">前回：${initialVal}%</div>`
+    ? `<div style="font-size:11px;color:var(--ink3);text-align:center;margin-bottom:6px;">前回：${initialVal}</div>`
     : '';
 
   const id = 'slider_' + Date.now();
@@ -201,10 +201,10 @@ function addSliderBubble(q) {
     <div class="bubble bot slider-bubble" style="min-width:260px;max-width:90%;">
       <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;margin-bottom:12px;">${esc(q.text)}</div>
       ${prevLabel}
-      <div class="slider-val-big" id="${id}-val">${initialVal}%</div>
-      <input class="qa-slider" type="range" min="0" max="100" step="10" value="${initialVal}" id="${id}-range"
-        oninput="qa.sliderVal=this.value;document.getElementById('${id}-val').textContent=this.value+'%'">
-      <div class="slider-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+      <div class="slider-val-big" id="${id}-val">${initialVal}</div>
+      <input class="qa-slider" type="range" min="0" max="10" step="1" value="${initialVal}" id="${id}-range"
+        oninput="qa.sliderVal=this.value;document.getElementById('${id}-val').textContent=this.value">
+      <div class="slider-labels"><span>0</span><span>2</span><span>5</span><span>8</span><span>10</span></div>
       <button class="btn btn-primary btn-sm" style="margin-top:14px;width:100%;justify-content:center;"
         onclick="confirmSlider('${q.goalId}','${id}')">この達成度で次へ →</button>
     </div>`;
@@ -221,7 +221,7 @@ function confirmSlider(goalId, id) {
   document.querySelector(`#${id}-range`).disabled = true;
 
   const bubbleId = `${goalId}__achievement`;
-  addBubble('user', `達成度：${val}%`, bubbleId);
+  addBubble('user', `達成度：${val}`, bubbleId);
   qa.currentIdx++;
   setTimeout(() => stepNext(), 500);
 }
@@ -353,7 +353,7 @@ async function finishQA() {
 function generateSummaryTemplate(answers, today) {
   let txt = `📅 ${today} の振り返り\n`;
   answers.forEach(a => {
-    txt += `\n▍${a.goalTitle}　達成度：${a.achievement}%\n`;
+    txt += `\n▍${a.goalTitle}　達成度：${a.achievement}\n`;
     // 該当目標のカスタム項目を取得
     const goal = db.goals.find(g => g.id === a.goalId);
     const questions = goal ? getQuestionsForGoal(goal) : [];
