@@ -187,6 +187,16 @@ input.qa-slider::-webkit-slider-thumb { -webkit-appearance:none; width:24px; hei
 .modal-title { font-size:15px; font-weight:700; margin-bottom:16px; }
 .modal-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
 
+/* ===== カスタム項目編集（目標モーダル内） ===== */
+.custom-q-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm); padding:10px 12px; margin-bottom:8px; }
+.custom-q-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.custom-q-num { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:700; }
+.custom-q-body { display:flex; flex-direction:column; gap:6px; }
+.custom-q-row { display:flex; align-items:center; gap:8px; }
+.custom-q-label-text { flex-shrink:0; width:56px; font-size:11px; color:var(--ink3); font-weight:500; }
+.custom-q-input { flex:1; min-width:0; border:1.5px solid var(--border2); border-radius:var(--r-sm); padding:6px 10px; font-size:13px; font-family:'Noto Sans JP',sans-serif; color:var(--ink); background:var(--card); outline:none; }
+.custom-q-input:focus { border-color:var(--accent); }
+
 /* ===== EMPTY / TOAST ===== */
 .empty { text-align:center; padding:48px 20px; color:var(--ink3); }
 .empty-icon { font-size:40px; margin-bottom:10px; }

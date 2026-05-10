@@ -22,6 +22,7 @@ let qa = {
 let editGoalId = null;
 let selCatVal  = 'health';
 let editCtx    = null;
+let currentQuestions = [];  // 目標モーダルで編集中の振り返り項目
 
 // ========== INIT ==========
 function init() {
