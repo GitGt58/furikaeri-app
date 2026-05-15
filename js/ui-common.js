@@ -110,7 +110,7 @@ function openEditModal(bubbleId) {
         oninput="document.getElementById('edit-slider-val').textContent=this.value">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:4px;font-family:'DM Mono',monospace;"><span>0</span><span>2</span><span>5</span><span>8</span><span>10</span></div>`;
   } else {
-    const cur = ans[key] || '';
+    const cur = (ans.responses && ans.responses[key]) || ans[key] || '';
     body.innerHTML = `<div style="font-size:12px;color:var(--ink3);margin-bottom:6px;">内容を編集してください</div>
       <textarea id="edit-text-input" rows="4" style="width:100%;border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--ink);background:var(--surface);outline:none;resize:vertical;line-height:1.7;">${esc(cur)}</textarea>`;
     setTimeout(() => document.getElementById('edit-text-input')?.focus(), 80);
@@ -135,7 +135,11 @@ function applyEdit() {
   } else {
     newVal = document.getElementById('edit-text-input').value.trim();
     if (!newVal) { showToast('内容を入力してください'); return; }
-    qa.answers[goalId][key] = newVal;
+    if (qa.answers[goalId].responses) {
+      qa.answers[goalId].responses[key] = newVal;
+    } else {
+      qa.answers[goalId][key] = newVal;
+    }
     const el = document.getElementById(`bubble-text-${goalId}__${key}`);
     if (el) el.textContent = wrapLong(newVal);
   }
